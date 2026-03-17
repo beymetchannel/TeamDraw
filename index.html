@@ -564,6 +564,10 @@ const TOURNAMENT_DATA = [
     confetti: ['#32cd32','#00e676','#76ff03','#fff','#00c853']
   }
 ];
+TOURNAMENT_DATA.forEach(td => {
+  const img = new Image();
+  img.src = td.image;
+});
 
 function getTournamentData(num) {
   const mod = num % 4;
