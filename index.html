@@ -92,9 +92,13 @@
   /* アイコン：元の60%（clamp値をそれぞれ×0.6） */
   .tournament-icon{width:clamp(54px,19vw,84px);display:block;margin:2rem auto .5rem;filter:drop-shadow(0 0 20px rgba(var(--result-glow-color),0.8));animation:popIn .5s cubic-bezier(.175,.885,.32,1.6) .1s forwards;transform:scale(0);}
   .tournament-name{font-family:'Dela Gothic One',sans-serif;font-size:clamp(1.1rem,5vw,1.6rem);letter-spacing:.08em;color:#fff;text-shadow:0 0 18px rgba(var(--result-glow-color),1),0 0 40px rgba(var(--result-glow-color),.6);text-align:center;margin-bottom:.6rem;animation:fadeUp .5s ease .3s forwards;opacity:0;}
-  /* 数字：元の2倍（clamp値をそれぞれ×2） */
-  .result-number{font-family:'Dela Gothic One',sans-serif;font-size:clamp(7rem,34vw,14rem);line-height:1;color:#fff;text-shadow:0 0 30px rgba(var(--result-glow-color),1),0 0 60px rgba(var(--result-glow-color),.6);animation:popIn .5s cubic-bezier(.175,.885,.32,1.6) forwards;transform:scale(0);}
-  .result-number-label{font-family:'Dela Gothic One',sans-serif;font-size:clamp(.9rem,4vw,1.2rem);color:rgba(var(--result-glow-color),0.9);letter-spacing:.2em;text-shadow:0 0 12px rgba(var(--result-glow-color),.7);animation:fadeUp .4s ease .2s forwards;opacity:0;margin-top:8rem;}
+  /* チーム画像 */
+  .team-image{width:clamp(180px,60vw,320px);display:block;margin:1rem auto .6rem;filter:drop-shadow(0 0 32px rgba(var(--result-glow-color),0.9)) drop-shadow(0 0 64px rgba(var(--result-glow-color),0.5));animation:popIn .55s cubic-bezier(.175,.885,.32,1.6) .15s forwards;transform:scale(0);}
+  /* チーム名 */
+  .result-team-name{font-family:'Dela Gothic One',sans-serif;font-size:clamp(2.2rem,11vw,4.5rem);line-height:1.1;color:#fff;text-shadow:0 0 30px rgba(var(--result-glow-color),1),0 0 60px rgba(var(--result-glow-color),.6);animation:popIn .5s cubic-bezier(.175,.885,.32,1.6) .05s forwards;transform:scale(0);text-align:center;margin-bottom:.4rem;}
+  /* 旧数字スタイル（後方互換用） */
+  .result-number{display:none;}
+  .result-number-label{display:none;}
   .result-sub{font-size:clamp(.7rem,2.6vw,.85rem);color:rgba(255,255,255,.5);letter-spacing:.05em;margin-top:.5rem;margin-bottom:.5rem;animation:fadeUp .5s ease .3s forwards;opacity:0;}
 
   /* 全体グロウ用オーバーレイ */
@@ -168,8 +172,8 @@
   <div class="inner" id="result-inner">
     <img id="tournament-icon" class="tournament-icon" src="" alt="">
     <div class="tournament-name" id="tournament-name"></div>
-    <div class="result-number-label">チームNo.</div>
-    <div class="result-number" id="result-num">0</div>
+    <img id="team-image" class="team-image" src="" alt="">
+    <div class="result-team-name" id="result-team-name"></div>
     <div id="bracket-container"></div>
     <div class="result-logo-sm"><img id="logo-img3" src="" alt="BEYMETX"></div>
   </div>
@@ -569,6 +573,21 @@ TOURNAMENT_DATA.forEach(td => {
   img.src = td.image;
 });
 
+/* チーム番号 → チーム名マップ */
+const TEAM_NAMES = {
+  1:'グローリー', 2:'バハムート', 3:'エンペラー', 4:'ペガサス',
+  5:'ドレイク', 6:'ラグナ', 7:'ワルキューレ', 8:'ワイバーン',
+  9:'ウルフ', 10:'ティラノ', 11:'レオン', 12:'ホエール',
+  13:'ユニコーン', 14:'グリフォン', 15:'ヘブンズ', 16:'クランチ',
+  17:'シャーク', 18:'ケルベロス', 19:'スコーピオ', 20:'ミラージュ',
+  21:'ペルソナ', 22:'ユグドラシル', 23:'ペンドラゴン', 24:'ゾディアック',
+  25:'ストーム', 26:'スパイラル', 27:'スラッシュ', 28:'シールド'
+};
+
+function getTeamName(num) {
+  return TEAM_NAMES[num] || ('チーム' + num);
+}
+
 function getTournamentData(num) {
   const mod = num % 4;
   if (mod === 1) return TOURNAMENT_DATA[0];
@@ -624,8 +643,21 @@ function showResult(num){
   tname.style.animation = 'fadeUp .5s ease .3s forwards';
   tname.style.opacity = '0';
 
-  // 数字
-  document.getElementById('result-num').textContent = num;
+  // チーム名
+  const teamName = getTeamName(num);
+  const rtn = document.getElementById('result-team-name');
+  rtn.textContent = teamName;
+  rtn.style.animation = 'none';
+  void rtn.offsetWidth;
+  rtn.style.animation = 'popIn .5s cubic-bezier(.175,.885,.32,1.6) .05s forwards';
+
+  // チーム画像
+  const teamImg = document.getElementById('team-image');
+  teamImg.src = 'image/' + teamName + '.png';
+  teamImg.alt = teamName;
+  teamImg.style.animation = 'none';
+  void teamImg.offsetWidth;
+  teamImg.style.animation = 'popIn .55s cubic-bezier(.175,.885,.32,1.6) .15s forwards';
 
   // テーマ適用
   applyTournamentTheme(td);
@@ -641,9 +673,6 @@ function showResult(num){
 
   bgGlow.style.opacity='1';
   show('result-screen');
-
-  const rn=document.getElementById('result-num');
-  rn.style.animation='none'; void rn.offsetWidth; rn.style.animation='popIn .5s cubic-bezier(.175,.885,.32,1.6) forwards';
 
   const inner=document.querySelector('#result-screen .inner');
   inner.scrollTop=0;
@@ -690,8 +719,8 @@ function renderBracket(currentNum){
   const halfRounds=Math.log2(half);   // 片側の収束ラウンド数
 
   /* ---- レイアウト定数 ---- */
-  const SW  =38;  // スロット幅
-  const SH  =20;  // スロット高
+  const SW  =64;  // スロット幅（チーム名表示用に拡大）
+  const SH  =22;  // スロット高
   const VG  = 6;  // スロット縦間隔
   const STUB=10;  // スロット端 → R1縦線 の横距離
   const STEP=15;  // ラウンド間の縦線ステップ
@@ -763,7 +792,7 @@ function renderBracket(currentNum){
     t.setAttribute('font-size',isCur?'12':'10');
     t.setAttribute('fill',isCur?'#fff': filled?'var(--green2)':'rgba(57,255,20,.38)');
     if(isCur) t.setAttribute('filter','url(#glow)');
-    t.textContent=seed;
+    t.textContent=getTeamName(seed);
     svg.appendChild(t);
   }
 
