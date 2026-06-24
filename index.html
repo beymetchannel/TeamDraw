@@ -651,14 +651,6 @@ function showResult(num){
   void rtn.offsetWidth;
   rtn.style.animation = 'popIn .5s cubic-bezier(.175,.885,.32,1.6) .05s forwards';
 
-  // チーム画像
-  const teamImg = document.getElementById('team-image');
-  teamImg.src = 'image/' + teamName + '.png';
-  teamImg.alt = teamName;
-  teamImg.style.animation = 'none';
-  void teamImg.offsetWidth;
-  teamImg.style.animation = 'popIn .55s cubic-bezier(.175,.885,.32,1.6) .15s forwards';
-
   // テーマ適用
   applyTournamentTheme(td);
 
@@ -671,16 +663,33 @@ function showResult(num){
     wrap.appendChild(c);
   }
 
-  bgGlow.style.opacity='1';
-  show('result-screen');
+  // チーム画像：先読み完了後に画面表示
+  const teamImg = document.getElementById('team-image');
+  teamImg.style.animation = 'none';
+  teamImg.style.transform = 'scale(0)';
+  teamImg.alt = teamName;
 
-  const inner=document.querySelector('#result-screen .inner');
-  inner.scrollTop=0;
-  requestAnimationFrame(()=>{
+  function doShow() {
+    bgGlow.style.opacity='1';
+    show('result-screen');
+
+    teamImg.style.animation = 'none';
+    void teamImg.offsetWidth;
+    teamImg.style.animation = 'popIn .55s cubic-bezier(.175,.885,.32,1.6) .15s forwards';
+
+    const inner=document.querySelector('#result-screen .inner');
+    inner.scrollTop=0;
     requestAnimationFrame(()=>{
-      inner.classList.toggle('center-aligned', inner.scrollHeight <= inner.clientHeight);
+      requestAnimationFrame(()=>{
+        inner.classList.toggle('center-aligned', inner.scrollHeight <= inner.clientHeight);
+      });
     });
-  });
+  }
+
+  const preload = new Image();
+  preload.onload = () => { teamImg.src = preload.src; doShow(); };
+  preload.onerror = () => { teamImg.src = 'image/' + teamName + '.png'; doShow(); };
+  preload.src = 'image/' + teamName + '.png';
 }
 
 /* ═══════════════════════════════════════════════════════════
