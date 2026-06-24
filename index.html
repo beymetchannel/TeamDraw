@@ -568,10 +568,31 @@ const TOURNAMENT_DATA = [
     confetti: ['#32cd32','#00e676','#76ff03','#fff','#00c853']
   }
 ];
-TOURNAMENT_DATA.forEach(td => {
-  const img = new Image();
-  img.src = td.image;
-});
+/* ────────────────────────────────────────────────────
+   起動時プリロード
+   全チーム画像・トーナメントアイコンをまとめて読み込み
+   IMAGE_CACHE[src] = HTMLImageElement（完了済み）として保持
+──────────────────────────────────────────────────── */
+const IMAGE_CACHE = {};
+(function preloadAll(){
+  const iconSrcs = TOURNAMENT_DATA.map(td => td.image);
+  const teamNameList = [
+    'グローリー','バハムート','エンペラー','ペガサス',
+    'ドレイク','ラグナ','ワルキューレ','ワイバーン',
+    'ウルフ','ティラノ','レオン','ホエール',
+    'ユニコーン','グリフォン','ヘブンズ','クランチ',
+    'シャーク','ケルベロス','スコーピオ','ミラージュ',
+    'ペルソナ','ユグドラシル','ペンドラゴン','ゾディアック',
+    'ストーム','スパイラル','スラッシュ','シールド'
+  ];
+  const teamSrcs = teamNameList.map(n => 'image/' + n + '.png');
+  [...iconSrcs, ...teamSrcs].forEach(src => {
+    const img = new Image();
+    img.onload = () => { IMAGE_CACHE[src] = img; };
+    img.onerror = () => { IMAGE_CACHE[src] = null; };
+    img.src = src;
+  });
+})();
 
 /* チーム番号 → チーム名マップ */
 const TEAM_NAMES = {
@@ -663,33 +684,25 @@ function showResult(num){
     wrap.appendChild(c);
   }
 
-  // チーム画像：先読み完了後に画面表示
+  // チーム画像：キャッシュから即時表示
+  const teamSrc = 'image/' + teamName + '.png';
   const teamImg = document.getElementById('team-image');
-  teamImg.style.animation = 'none';
-  teamImg.style.transform = 'scale(0)';
+  teamImg.src = teamSrc;
   teamImg.alt = teamName;
+  teamImg.style.animation = 'none';
+  void teamImg.offsetWidth;
+  teamImg.style.animation = 'popIn .55s cubic-bezier(.175,.885,.32,1.6) .15s forwards';
 
-  function doShow() {
-    bgGlow.style.opacity='1';
-    show('result-screen');
+  bgGlow.style.opacity='1';
+  show('result-screen');
 
-    teamImg.style.animation = 'none';
-    void teamImg.offsetWidth;
-    teamImg.style.animation = 'popIn .55s cubic-bezier(.175,.885,.32,1.6) .15s forwards';
-
-    const inner=document.querySelector('#result-screen .inner');
-    inner.scrollTop=0;
+  const inner=document.querySelector('#result-screen .inner');
+  inner.scrollTop=0;
+  requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        inner.classList.toggle('center-aligned', inner.scrollHeight <= inner.clientHeight);
-      });
+      inner.classList.toggle('center-aligned', inner.scrollHeight <= inner.clientHeight);
     });
-  }
-
-  const preload = new Image();
-  preload.onload = () => { teamImg.src = preload.src; doShow(); };
-  preload.onerror = () => { teamImg.src = 'image/' + teamName + '.png'; doShow(); };
-  preload.src = 'image/' + teamName + '.png';
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════
